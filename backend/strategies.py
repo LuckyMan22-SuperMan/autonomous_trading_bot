@@ -7,3 +7,10 @@ index, where 1 = fully long and 0 = flat (no shorting, for simplicity).
 The backtester and the paper trader both consume this same signal, so a
 strategy written once works in both modes.
 """
+
+from __future__ import annotations
+
+from typing import Callable, Dict
+
+import numpy as np
+import pandas as pd
