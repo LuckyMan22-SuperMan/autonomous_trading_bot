@@ -117,3 +117,19 @@ STRATEGIES: Dict[str, Dict] = {
         "params": {},
     },
 }
+
+
+
+def get_signal(name: str, df: pd.DataFrame, params: dict | None = None) -> pd.Series:
+    """Resolve a strategy by name and compute its target-position series."""
+    if name not in STRATEGIES:
+        raise ValueError(f"Unknown strategy '{name}'. Options: {list(STRATEGIES)}")
+    spec = STRATEGIES[name]
+    merged = dict(spec["params"])
+    if params:
+        # Only accept known params, cast to the type of the default.
+        for k, v in params.items():
+            if k in merged and v is not None:
+                merged[k] = type(merged[k])(v)
+    fn: Callable = spec["fn"]
+    return fn(df, **merged)
