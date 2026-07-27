@@ -61,6 +61,30 @@ def macd_trend(df: pd.DataFrame, fast: int = 12, slow: int = 26,
     pos = (macd > signal_line).astype(float)
     return pos.fillna(0.0)
 
+
+def bollinger_reversion(df: pd.DataFrame, period: int = 20,
+                        num_std: float = 2.0) -> pd.Series:
+    """Buy at lower band, exit at middle band (mean reversion)."""
+    close = df["Close"]
+    ma = close.rolling(period).mean()
+    std = close.rolling(period).std()
+    lower = ma - num_std * std
+
+    pos = pd.Series(index=close.index, dtype=float)
+    holding = 0.0
+    for i in range(len(close)):
+        if np.isnan(ma.iloc[i]):
+            pos.iloc[i] = 0.0
+            continue
+        price = close.iloc[i]
+        if holding == 0.0 and price <= lower.iloc[i]:
+            holding = 1.0
+        elif holding == 1.0 and price >= ma.iloc[i]:
+            holding = 0.0
+        pos.iloc[i] = holding
+    return pos
+
+
 def buy_and_hold(df: pd.DataFrame) -> pd.Series:
     """Benchmark: always fully invested."""
     return pd.Series(1.0, index=df.index)
