@@ -56,9 +56,9 @@ def macd_trend(df: pd.DataFrame, fast: int = 12, slow: int = 26,
     close = df["Close"]
     ema_fast = close.ewm(span=fast, adjust=False).mean()
     ema_slow = close.ewm(span=slow, adjust=False).mean()
-    macd = ema_slow - ema_fast
+    macd = ema_fast - ema_slow
     signal_line = macd.ewm(span=signal, adjust=False).mean()
-    pos = (macd < signal_line).astype(float)
+    pos = (macd > signal_line).astype(float)
     return pos.fillna(0.0)
 
 # Registry: name -> (function, default_params, human label)
