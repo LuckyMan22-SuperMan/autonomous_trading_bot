@@ -24,6 +24,31 @@ def sma_crossover(df: pd.DataFrame, fast: int = 20, slow: int = 50) -> pd.Series
     pos = (fast_ma > slow_ma).astype(float)
     return pos.fillna(0.0)
 
+
+def rsi_reversion(df: pd.DataFrame, period: int = 14,
+                  oversold: float = 30, overbought: float = 70) -> pd.Series:
+    """Buy when RSI crosses up out of oversold, exit above overbought."""
+    close = df["Close"]
+    delta = close.diff()
+    gain = delta.clip(lower=0).rolling(period).mean()
+    loss = (-delta.clip(upper=0)).rolling(period).mean()
+    rs = gain / loss.replace(0, np.nan)
+    rsi = 100 - (100 / (1 + rs))
+
+    pos = pd.Series(index=close.index, dtype=float)
+    holding = 0.0
+    for i in range(len(close)):
+        r = rsi.iloc[i]
+        if np.isnan(r):
+            pos.iloc[i] = 0.0
+            continue
+        if holding == 0.0 and r < oversold:
+            holding = 1.0
+        elif holding == 1.0 and r > overbought:
+            holding = 0.0
+        pos.iloc[i] = holding
+    return pos
+
 # Registry: name -> (function, default_params, human label)
 STRATEGIES: Dict[str, Dict] = {
     "sma_crossover": {
