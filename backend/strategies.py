@@ -61,6 +61,10 @@ def macd_trend(df: pd.DataFrame, fast: int = 12, slow: int = 26,
     pos = (macd > signal_line).astype(float)
     return pos.fillna(0.0)
 
+def buy_and_hold(df: pd.DataFrame) -> pd.Series:
+    """Benchmark: always fully invested."""
+    return pd.Series(1.0, index=df.index)
+
 # Registry: name -> (function, default_params, human label)
 STRATEGIES: Dict[str, Dict] = {
     "sma_crossover": {
