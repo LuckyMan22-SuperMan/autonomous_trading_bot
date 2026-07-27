@@ -11,3 +11,137 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">Q</span>
+      <div>
+        <h1>Quant Terminal</h1>
+        <p>Strategy Backtesting & Algorithmic Paper Execution</p>
+      </div>
+    </div>
+    <div class="disclaimer">Simulated Environment · No Real Capital At Risk</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="backtest">Backtest Engine</button>
+    <button class="tab" data-tab="paper">Paper Trading Engine</button>
+  </nav>
+
+  <main class="container">
+    <!-- ===================== BACKTEST TAB ===================== -->
+    <section id="tab-backtest" class="tabpane">
+      <div class="grid">
+        <div class="panel controls">
+          <h2 class="panel-title">Parameters</h2>
+          <label class="field"><span>Ticker</span>
+            <input id="bt-ticker" value="AAPL" placeholder="e.g. AAPL, MSFT, TSLA" />
+          </label>
+          <label class="field"><span>Strategy</span>
+            <select id="bt-strategy"></select>
+          </label>
+          <label class="field"><span>Data Provider</span>
+            <select id="bt-source">
+              <option value="yahoo" selected>Yahoo Finance (Live API)</option>
+              <option value="synthetic">Synthetic (Offline Demo)</option>
+            </select>
+          </label>
+          <div class="two">
+            <label class="field"><span>Period</span>
+              <select id="bt-period">
+                <option>6mo</option><option>1y</option>
+                <option selected>2y</option><option>5y</option><option>10y</option>
+              </select>
+            </label>
+            <label class="field"><span>Resolution</span>
+              <select id="bt-interval">
+                <option selected value="1d">1 Day</option>
+                <option value="1wk">1 Week</option>
+              </select>
+            </label>
+          </div>
+          <div class="two">
+            <label class="field"><span>Capital ($)</span>
+              <input id="bt-cash" type="number" value="10000" />
+            </label>
+            <label class="field"><span>Slippage / Fee</span>
+              <input id="bt-commission" type="number" step="0.0001" value="0.0005" />
+            </label>
+          </div>
+          <div id="bt-params" class="params"></div>
+          <button class="btn primary" id="bt-run">Execute Backtest</button>
+          <p class="error" id="bt-error"></p>
+        </div>
+
+        <div class="panel results">
+          <h2 class="panel-title">Performance Metrics</h2>
+          <div id="bt-placeholder" class="placeholder">
+            <div class="ph-icon">📊</div>
+            <p>Select your strategy parameters and run execution.</p>
+          </div>
+          <div id="bt-output" class="hidden">
+            <div id="bt-metrics" class="metrics"></div>
+            <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
+            <h3 class="sub">Trade Execution History</h3>
+            <div class="table-wrap"><table id="bt-trades"></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PAPER TAB ===================== -->
+    <section id="tab-paper" class="tabpane hidden">
+      <div class="grid">
+        <div class="panel controls">
+          <h2 class="panel-title">Session Setup</h2>
+          <label class="field"><span>Ticker</span>
+            <input id="pp-ticker" value="AAPL" />
+          </label>
+          <label class="field"><span>Strategy</span>
+            <select id="pp-strategy"></select>
+          </label>
+          <label class="field"><span>Data Source</span>
+            <select id="pp-source">
+              <option value="yahoo" selected>Yahoo Finance (Live API)</option>
+              <option value="synthetic">Synthetic (Offline Demo)</option>
+            </select>
+          </label>
+          <div class="two">
+            <label class="field"><span>Capital ($)</span>
+              <input id="pp-cash" type="number" value="10000" />
+            </label>
+            <label class="field"><span>Bar Interval</span>
+              <select id="pp-bar">
+                <option value="1m">1 min</option>
+                <option value="5m" selected>5 min</option>
+                <option value="15m">15 min</option>
+              </select>
+            </label>
+          </div>
+          <label class="field"><span>Polling Cycle (sec)</span>
+            <input id="pp-interval" type="number" value="15" min="5" />
+          </label>
+          <div class="btn-row">
+            <button class="btn primary" id="pp-start">Start Session</button>
+            <button class="btn danger" id="pp-stop" disabled>Halt Session</button>
+          </div>
+          <p class="error" id="pp-error"></p>
+          <p class="hint">Live data feed active during open exchange hours.</p>
+        </div>
+
+        <div class="panel results">
+          <h2 class="panel-title">Real-time Portfolio</h2>
+          <div id="pp-status" class="status-badge off">Idle</div>
+          <div id="pp-metrics" class="metrics"></div>
+          <div class="chart-wrap"><canvas id="paperChart"></canvas></div>
+          <h3 class="sub">Filled Orders</h3>
+          <div class="table-wrap"><table id="pp-trades"></table></div>
+        </div>
+      </div>
+    </section>
+  </main>`
+
+  <footer class="footer">Quant Engine Terminal v1.0</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
