@@ -49,6 +49,18 @@ def rsi_reversion(df: pd.DataFrame, period: int = 14,
         pos.iloc[i] = holding
     return pos
 
+
+def macd_trend(df: pd.DataFrame, fast: int = 12, slow: int = 26,
+               signal: int = 9) -> pd.Series:
+    """Long when MACD line is above its signal line."""
+    close = df["Close"]
+    ema_fast = close.ewm(span=fast, adjust=False).mean()
+    ema_slow = close.ewm(span=slow, adjust=False).mean()
+    macd = ema_slow - ema_fast
+    signal_line = macd.ewm(span=signal, adjust=False).mean()
+    pos = (macd < signal_line).astype(float)
+    return pos.fillna(0.0)
+
 # Registry: name -> (function, default_params, human label)
 STRATEGIES: Dict[str, Dict] = {
     "sma_crossover": {
