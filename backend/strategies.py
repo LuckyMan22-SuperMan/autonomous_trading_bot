@@ -15,6 +15,15 @@ from typing import Callable, Dict
 import numpy as np
 import pandas as pd
 
+
+def sma_crossover(df: pd.DataFrame, fast: int = 20, slow: int = 50) -> pd.Series:
+    """Long when fast SMA is above slow SMA."""
+    close = df["Close"]
+    fast_ma = close.rolling(fast).mean()
+    slow_ma = close.rolling(slow).mean()
+    pos = (fast_ma > slow_ma).astype(float)
+    return pos.fillna(0.0)
+
 # Registry: name -> (function, default_params, human label)
 STRATEGIES: Dict[str, Dict] = {
     "sma_crossover": {
