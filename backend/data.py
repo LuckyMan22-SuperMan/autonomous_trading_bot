@@ -130,3 +130,27 @@ def get_history(ticker: str, period: str = "2y", interval: str = "1d",
         df = _normalize(df)
     _cache_set(key, df)
     return df
+
+
+def get_intraday(ticker: str, period: str = "5d", interval: str = "5m",
+                 ttl: float = 30, source: Optional[str] = None,
+                 market: Optional[str] = None) -> pd.DataFrame:
+    """Recent intraday bars for live paper trading (short TTL)."""
+    src = _resolve_source(source)
+    market_key = _resolve_market(market)
+    ticker = _normalize_ticker(ticker, market=market_key)
+    key = f"intraday:{src}:{market_key}:{ticker}:{period}:{interval}"
+    cached = _cache_get(key, ttl)
+    if cached is not None:
+        return cached
+    if src == "synthetic":
+        df = _synthetic_intraday(ticker, interval)
+    else:
+        df = yf.download(ticker, period=period, interval=interval,
+                         auto_adjust=True, progress=False, session=_SESSION)
+        if df is None or df.empty:
+            raise ValueError(f"No intraday data for '{ticker}'.")
+        df = _normalize(df)
+    _cache_set(key, df)
+    return df
+
