@@ -49,6 +49,18 @@ def _build_session() -> Optional[requests.Session]:
 
 _SESSION = _build_session()
 
+
+def _cache_get(key: str, ttl: float) -> pd.DataFrame | None:
+    hit = _CACHE.get(key)
+    if hit and (time.time() - hit[0]) < ttl:
+        return hit[1].copy()
+    return None
+
+
+def _cache_set(key: str, df: pd.DataFrame) -> None:
+    _CACHE[key] = (time.time(), df.copy())
+
+
 def _normalize(df: pd.DataFrame) -> pd.DataFrame:
     """Flatten yfinance columns and keep a clean OHLCV frame."""
     if isinstance(df.columns, pd.MultiIndex):
@@ -85,6 +97,8 @@ def _normalize_ticker(ticker: str, market: Optional[str] = None) -> str:
         raise ValueError(f"Unsupported market '{market_key}'. Use 'india' or 'us'.")
 
     symbol = (ticker or "").strip()
+    if not symbol:
+        raise ValueError("Ticker cannot be empty.")
 
     if market_key == "india":
         upper = symbol.upper()
