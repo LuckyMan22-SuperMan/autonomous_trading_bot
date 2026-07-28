@@ -85,3 +85,25 @@ class PaperTrader:
         with self._lock:
             self.running = False
         return self.status()
+
+    # ------------------------------------------------------------------ #
+    def _log_trade(self, side: str, price: float) -> None:
+        self.trade_log.append({
+            "time": _now(),
+            "side": side,
+            "price": round(price, 4),
+            "shares": round(self.shares if side == "BUY" else 0.0, 4),
+            "equity": round(self._equity_value(price), 2),
+        })
+
+    def _equity_value(self, price: float) -> float:
+        return self.cash + self.shares * price
+
+    def _record_equity(self) -> None:
+        with self._lock:
+            eq = self._equity_value(self.last_price)
+            self.equity_history.append({"time": _now(), "equity": round(eq, 2),
+                                        "price": round(self.last_price, 4)})
+            # Cap history to keep memory/payload bounded.
+            if len(self.equity_history) > 2000:
+                self.equity_history = self.equity_history[-2000:]
