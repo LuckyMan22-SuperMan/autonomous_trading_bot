@@ -45,3 +45,47 @@ def run_backtest(df: pd.DataFrame, positions: pd.Series,
         "trades": trades,
         "metrics": metrics,
     }
+
+
+def _extract_trades(close: pd.Series, pos: pd.Series) -> List[Dict]:
+    """Reconstruct round-trip trades from position changes."""
+    trades: List[Dict] = []
+    entry_price = None
+    entry_date = None
+    prev = 0.0
+    for date, p in pos.items():
+        price = float(close.loc[date])
+        if prev == 0.0 and p > 0.0:  # entered long
+            entry_price = price
+            entry_date = date
+        elif prev > 0.0 and p == 0.0 and entry_price is not None:  # exited
+            ret = (price - entry_price) / entry_price
+            trades.append({
+                "entry_date": entry_date.isoformat(),
+                "exit_date": date.isoformat(),
+                "entry_price": round(entry_price, 4),
+                "exit_price": round(price, 4),
+                "return_pct": round(ret * 100, 2),
+            })
+            entry_price = None
+        prev = p
+    # Close any open position at the last bar (mark-to-market).
+    if entry_price is not None:
+        last_date = close.index[-1]
+        price = float(close.iloc[-1])
+        ret = (price - entry_price) / entry_price
+        trades.append({
+            "entry_date": entry_date.isoformat(),
+            "exit_date": last_date.isoformat(),
+            "entry_price": round(entry_price, 4),
+            "exit_price": round(price, 4),
+            "return_pct": round(ret * 100, 2),
+            "open": True,
+        })
+    return trades
+
+
+def _max_drawdown(equity: pd.Series) -> float:
+    running_max = equity.cummax()
+    drawdown = (equity - running_max) / running_max
+    return float(drawdown.min())
