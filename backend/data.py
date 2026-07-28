@@ -78,6 +78,22 @@ def _resolve_market(market: Optional[str]) -> str:
     return (market or DEFAULT_MARKET).lower()
 
 
+def _normalize_ticker(ticker: str, market: Optional[str] = None) -> str:
+    """Normalize ticker symbols for the selected market."""
+    market_key = _resolve_market(market)
+    if market_key not in {"india", "us"}:
+        raise ValueError(f"Unsupported market '{market_key}'. Use 'india' or 'us'.")
+
+    symbol = (ticker or "").strip()
+
+    if market_key == "india":
+        upper = symbol.upper()
+        if "." in upper:
+            return upper
+        return f"{upper}.NS"
+    return symbol.upper()
+
+
 def get_history(ticker: str, period: str = "2y", interval: str = "1d",
                 ttl: float = 3600, source: Optional[str] = None,
                 market: Optional[str] = None) -> pd.DataFrame:
