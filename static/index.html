@@ -35,7 +35,7 @@
         <div class="panel controls">
           <h2 class="panel-title">Parameters</h2>
           <label class="field"><span>Ticker</span>
-            <input id="bt-ticker" value="AAPL" placeholder="e.g. AAPL, MSFT, TSLA" />
+            <input id="bt-ticker" value="RELIANCE.NS" placeholder="e.g. RELIANCE.NS, TCS.NS, INFY.NS" />
           </label>
           <label class="field"><span>Strategy</span>
             <select id="bt-strategy"></select>
@@ -44,6 +44,12 @@
             <select id="bt-source">
               <option value="yahoo" selected>Yahoo Finance (Live API)</option>
               <option value="synthetic">Synthetic (Offline Demo)</option>
+            </select>
+          </label>
+          <label class="field"><span>Market</span>
+            <select id="bt-market">
+              <option value="india" selected>India</option>
+              <option value="us">United States</option>
             </select>
           </label>
           <div class="two">
@@ -61,7 +67,7 @@
             </label>
           </div>
           <div class="two">
-            <label class="field"><span>Capital ($)</span>
+            <label class="field"><span>Capital (₹)</span>
               <input id="bt-cash" type="number" value="10000" />
             </label>
             <label class="field"><span>Slippage / Fee</span>
@@ -95,7 +101,7 @@
         <div class="panel controls">
           <h2 class="panel-title">Session Setup</h2>
           <label class="field"><span>Ticker</span>
-            <input id="pp-ticker" value="AAPL" />
+            <input id="pp-ticker" value="RELIANCE.NS" placeholder="e.g. RELIANCE.NS, TCS.NS, INFY.NS" />
           </label>
           <label class="field"><span>Strategy</span>
             <select id="pp-strategy"></select>
@@ -104,6 +110,12 @@
             <select id="pp-source">
               <option value="yahoo" selected>Yahoo Finance (Live API)</option>
               <option value="synthetic">Synthetic (Offline Demo)</option>
+            </select>
+          </label>
+          <label class="field"><span>Market</span>
+            <select id="pp-market">
+              <option value="india" selected>India</option>
+              <option value="us">United States</option>
             </select>
           </label>
           <div class="two">
@@ -126,7 +138,7 @@
             <button class="btn danger" id="pp-stop" disabled>Halt Session</button>
           </div>
           <p class="error" id="pp-error"></p>
-          <p class="hint">Live data feed active during open exchange hours.</p>
+          <p class="hint">Live data feed active during open exchange hours, including Indian market sessions.</p>
         </div>
 
         <div class="panel results">
