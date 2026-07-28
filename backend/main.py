@@ -63,3 +63,18 @@ class PaperStartRequest(BaseModel):
     market: str = "india"
     params: dict | None = None
 
+
+# --------------------------------------------------------------------------- #
+# Endpoints
+# --------------------------------------------------------------------------- #
+@app.get("/api/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/api/strategies")
+def list_strategies() -> dict:
+    return {
+        name: {"label": spec["label"], "params": spec["params"]}
+        for name, spec in strategies.STRATEGIES.items()
+    }
