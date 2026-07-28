@@ -87,6 +87,14 @@ class PaperTrader:
         return self.status()
 
     # ------------------------------------------------------------------ #
+    def _run_loop(self) -> None:
+        while not self._stop.is_set():
+            try:
+                self._tick()
+            except Exception as exc:  # noqa: BLE001
+                with self._lock:
+                    self.error = str(exc)
+            self._stop.wait(self.interval_sec)
     def _log_trade(self, side: str, price: float) -> None:
         self.trade_log.append({
             "time": _now(),
