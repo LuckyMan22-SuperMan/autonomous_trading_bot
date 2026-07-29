@@ -78,3 +78,52 @@ def list_strategies() -> dict:
         name: {"label": spec["label"], "params": spec["params"]}
         for name, spec in strategies.STRATEGIES.items()
     }
+
+
+@app.post("/api/backtest")
+def run_backtest(req: BacktestRequest) -> dict:
+    try:
+        df = data.get_history(req.ticker, period=req.period, interval=req.interval,
+                              source=req.source, market=req.market)
+        signal = strategies.get_signal(req.strategy, df, req.params)
+        ppy = 252 if req.interval == "1d" else 252 * 6
+        result = bt.run_backtest(
+            df, signal,
+            initial_cash=req.initial_cash,
+            commission=req.commission,
+            periods_per_year=ppy,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Backtest failed: {exc}")
+    result["ticker"] = req.ticker.upper()
+    result["strategy"] = req.strategy
+    return result
+
+
+@app.post("/api/paper/start")
+def paper_start(req: PaperStartRequest) -> dict:
+    try:
+        return trader.start(
+            ticker=req.ticker,
+            strategy=req.strategy,
+            params=req.params,
+            initial_cash=req.initial_cash,
+            interval_sec=req.interval_sec,
+            bar_interval=req.bar_interval,
+            source=req.source,
+            market=req.market,
+        )
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/paper/stop")
+def paper_stop() -> dict:
+    return trader.stop()
+
+
+@app.get("/api/paper/status")
+def paper_status() -> dict:
+    return trader.status()
