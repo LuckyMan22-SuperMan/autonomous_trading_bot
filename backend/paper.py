@@ -95,6 +95,35 @@ class PaperTrader:
                 with self._lock:
                     self.error = str(exc)
             self._stop.wait(self.interval_sec)
+
+    def _tick(self) -> None:
+        df = data.get_intraday(self.ticker, period="5d",
+                               interval=self.bar_interval, ttl=self.interval_sec,
+                               source=self.source, market=self.market)
+        signal = strategies.get_signal(self.strategy, df, self.params)
+        target = float(signal.iloc[-1]) if len(signal) else 0.0
+        price = float(df["Close"].iloc[-1])
+
+        with self._lock:
+            self.last_price = price
+            self.error = None
+            holding = self.shares > 0
+
+            if target >= 0.5 and not holding and self.cash > 0:
+                # Go all-in.
+                spend = self.cash * (1 - self.commission)
+                self.shares = spend / price
+                self.cash = 0.0
+                self._log_trade("BUY", price)
+            elif target < 0.5 and holding:
+                # Exit fully.
+                proceeds = self.shares * price * (1 - self.commission)
+                self.cash += proceeds
+                self.shares = 0.0
+                self._log_trade("SELL", price)
+
+        self._record_equity()
+
     def _log_trade(self, side: str, price: float) -> None:
         self.trade_log.append({
             "time": _now(),
@@ -115,3 +144,39 @@ class PaperTrader:
             # Cap history to keep memory/payload bounded.
             if len(self.equity_history) > 2000:
                 self.equity_history = self.equity_history[-2000:]
+
+    # ------------------------------------------------------------------ #
+    def status(self) -> Dict:
+        with self._lock:
+            equity = self._equity_value(self.last_price)
+            pnl = equity - self.initial_cash
+            pnl_pct = (pnl / self.initial_cash * 100) if self.initial_cash else 0.0
+            return {
+                "running": self.running,
+                "ticker": self.ticker,
+                "strategy": self.strategy,
+                "started_at": self.started_at,
+                "interval_sec": self.interval_sec,
+                "bar_interval": self.bar_interval,
+                "market": self.market,
+                "cash": round(self.cash, 2),
+                "shares": round(self.shares, 4),
+                "last_price": round(self.last_price, 4),
+                "position": "LONG" if self.shares > 0 else "FLAT",
+                "equity": round(equity, 2),
+                "initial_cash": round(self.initial_cash, 2),
+                "pnl": round(pnl, 2),
+                "pnl_pct": round(pnl_pct, 2),
+                "num_trades": len(self.trade_log),
+                "error": self.error,
+                "equity_history": self.equity_history[-500:],
+                "trade_log": self.trade_log[-100:],
+            }
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+
+
+# Module-level singleton used by the API.
+trader = PaperTrader()
