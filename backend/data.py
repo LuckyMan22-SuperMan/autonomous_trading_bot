@@ -154,3 +154,10 @@ def get_intraday(ticker: str, period: str = "5d", interval: str = "5m",
     _cache_set(key, df)
     return df
 
+
+def latest_price(ticker: str, source: Optional[str] = None,
+                 market: Optional[str] = None) -> float:
+    df = get_intraday(ticker, period="1d", interval="1m", ttl=15,
+                      source=source, market=market)
+    return float(df["Close"].iloc[-1])
+
