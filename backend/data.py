@@ -205,3 +205,14 @@ def _synthetic_history(ticker: str, period: str, interval: str) -> pd.DataFrame:
     close = _gbm_prices(rng, n, start_price, mu=0.0004, sigma=daily_vol)
     return _ohlcv_from_close(rng, close, index)
 
+
+def _synthetic_intraday(ticker: str, interval: str) -> pd.DataFrame:
+    step = _INTRADAY_MINUTES.get(interval, 5)
+    # Two trading days worth of bars, drifting from the last daily close.
+    bars = int((2 * 6.5 * 60) / step)
+    rng = np.random.default_rng(_seed_for(ticker) + int(time.time() // 60))
+    end = datetime.now()
+    index = pd.date_range(end=end, periods=bars, freq=f"{step}min")
+    start_price = 50 + (_seed_for(ticker) % 400)
+    close = _gbm_prices(rng, bars, start_price, mu=0.0, sigma=0.0015)
+    return _ohlcv_from_close(rng, close, index)
