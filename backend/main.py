@@ -127,3 +127,21 @@ def paper_stop() -> dict:
 @app.get("/api/paper/status")
 def paper_status() -> dict:
     return trader.status()
+
+
+# --------------------------------------------------------------------------- #
+# Static frontend
+# --------------------------------------------------------------------------- #
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.get("/")
+    def index() -> FileResponse:
+        return FileResponse(str(STATIC_DIR / "index.html"))
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.environ.get("PORT", "8000"))
+    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=True)
