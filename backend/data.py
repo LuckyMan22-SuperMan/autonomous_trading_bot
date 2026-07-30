@@ -210,6 +210,7 @@ def _synthetic_intraday(ticker: str, interval: str) -> pd.DataFrame:
     step = _INTRADAY_MINUTES.get(interval, 5)
     # Two trading days worth of bars, drifting from the last daily close.
     bars = int((2 * 6.5 * 60) / step)
+    # Seed with time so successive polls advance the simulated price.
     rng = np.random.default_rng(_seed_for(ticker) + int(time.time() // 60))
     end = datetime.now()
     index = pd.date_range(end=end, periods=bars, freq=f"{step}min")
