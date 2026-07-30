@@ -150,3 +150,48 @@ if ($("bt-run")) {
 function metricCard(k, v, cssClass = "") {
   return `<div class="metric"><div class="k">${k}</div><div class="v ${cssClass}">${v}</div></div>`;
 }
+
+function renderBacktest(r) {
+  $("bt-placeholder").classList.add("hidden");
+  $("bt-output").classList.remove("hidden");
+  const m = r.metrics;
+  $("bt-metrics").innerHTML = [
+    metricCard("Total Return", m.total_return_pct + "%", cls(m.total_return_pct)),
+    metricCard("Buy & Hold", m.benchmark_return_pct + "%", cls(m.benchmark_return_pct)),
+    metricCard("CAGR", m.cagr_pct + "%", cls(m.cagr_pct)),
+    metricCard("Sharpe", m.sharpe, cls(m.sharpe)),
+    metricCard("Max Drawdown", m.max_drawdown_pct + "%", "neg"),
+    metricCard("Win Rate", m.win_rate_pct + "%"),
+    metricCard("Trades", m.num_trades),
+    metricCard("Final Equity", fmtMoney(m.final_equity)),
+  ].join("");
+
+  equityChart = lineChart("equityChart", equityChart, r.dates, [
+    {
+      label: `${r.strategy} Equity`,
+      data: r.equity,
+      borderColor: "#3fb950",
+      backgroundColor: "rgba(63,185,80,0.05)",
+      borderWidth: 1.5,
+      fill: true
+    },
+    {
+      label: "Benchmark (Buy & Hold)",
+      data: r.benchmark,
+      borderColor: "#8b949e",
+      borderWidth: 1,
+      borderDash: [3, 3],
+      fill: false
+    },
+  ]);
+
+  const rows = r.trades.slice(-40).reverse();
+  $("bt-trades").innerHTML =
+    `<tr><th>Entry</th><th>Exit</th><th>Buy</th><th>Sell</th><th>Return</th></tr>` +
+    (rows.length
+      ? rows.map((t) =>
+          `<tr><td>${t.entry_date.slice(0,10)}</td><td>${t.exit_date.slice(0,10)}${t.open ? " *" : ""}</td>
+           <td>${t.entry_price}</td><td>${t.exit_price}</td>
+           <td class="${cls(t.return_pct)}">${t.return_pct}%</td></tr>`).join("")
+      : `<tr><td colspan="5" style="color:#8b949e">No trades generated.</td></tr>`);
+}
