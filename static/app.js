@@ -73,3 +73,80 @@ function collectParams(scope) {
   });
   return Object.keys(out).length ? out : null;
 }
+
+// ---------------------------------------------------------------- charts
+let equityChart, paperChart;
+
+function lineChart(canvasId, existing, labels, datasets) {
+  if (existing) existing.destroy();
+  const el = $(canvasId);
+  if (!el) return null;
+
+  return new Chart(el, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: "#8b949e", boxWidth: 12, font: { family: "Inter" } }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#8b949e", maxTicksLimit: 8 },
+          grid: { color: "rgba(48, 54, 61, 0.5)" }
+        },
+        y: {
+          ticks: { color: "#8b949e" },
+          grid: { color: "rgba(48, 54, 61, 0.5)" }
+        },
+      },
+      elements: { point: { radius: 0 } },
+    },
+  });
+}
+
+// ---------------------------------------------------------------- backtest
+if ($("bt-strategy")) {
+  $("bt-strategy").addEventListener("change", renderParams);
+}
+
+if ($("bt-run")) {
+  $("bt-run").addEventListener("click", async () => {
+    const btn = $("bt-run");
+    $("bt-error").textContent = "";
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Running...`;
+    try {
+      const body = {
+        ticker: $("bt-ticker").value.trim(),
+        strategy: $("bt-strategy").value,
+        period: $("bt-period").value,
+        interval: $("bt-interval").value,
+        initial_cash: parseFloat($("bt-cash").value),
+        commission: parseFloat($("bt-commission").value),
+        source: $("bt-source").value,
+        market: $("bt-market").value,
+        params: collectParams("#bt-params"),
+      };
+      const r = await api("/api/backtest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      renderBacktest(r);
+    } catch (e) {
+      $("bt-error").textContent = e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Execute Backtest";
+    }
+  });
+}
+
+function metricCard(k, v, cssClass = "") {
+  return `<div class="metric"><div class="k">${k}</div><div class="v ${cssClass}">${v}</div></div>`;
+}
