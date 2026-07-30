@@ -177,3 +177,16 @@ def _gbm_prices(rng: np.random.Generator, n: int, start: float,
     path = start * np.exp(np.cumsum(shocks))
     return path
 
+
+def _ohlcv_from_close(rng: np.random.Generator, close: np.ndarray,
+                      index: pd.DatetimeIndex) -> pd.DataFrame:
+    close = np.asarray(close, dtype=float)
+    prev = np.concatenate([[close[0]], close[:-1]])
+    open_ = prev * (1 + rng.normal(0, 0.002, size=len(close)))
+    high = np.maximum(open_, close) * (1 + np.abs(rng.normal(0, 0.004, size=len(close))))
+    low = np.minimum(open_, close) * (1 - np.abs(rng.normal(0, 0.004, size=len(close))))
+    volume = rng.integers(1_000_000, 8_000_000, size=len(close))
+    return pd.DataFrame(
+        {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
+        index=index,
+    )
