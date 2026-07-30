@@ -89,3 +89,38 @@ def _max_drawdown(equity: pd.Series) -> float:
     running_max = equity.cummax()
     drawdown = (equity - running_max) / running_max
     return float(drawdown.min())
+
+
+def _metrics(equity: pd.Series, returns: pd.Series, trades: List[Dict],
+             periods_per_year: int, initial_cash: float,
+             bench_equity: pd.Series) -> Dict:
+    total_return = equity.iloc[-1] / initial_cash - 1.0
+    bench_return = bench_equity.iloc[-1] / initial_cash - 1.0
+    n = len(returns)
+    years = max(n / periods_per_year, 1e-9)
+    cagr = (equity.iloc[-1] / initial_cash) ** (1 / years) - 1.0
+
+    std = returns.std()
+    sharpe = (returns.mean() / std * np.sqrt(periods_per_year)) if std > 0 else 0.0
+
+    downside = returns[returns < 0].std()
+    sortino = (returns.mean() / downside * np.sqrt(periods_per_year)) if downside > 0 else 0.0
+
+    wins = [t for t in trades if t["return_pct"] > 0]
+    win_rate = (len(wins) / len(trades)) if trades else 0.0
+    avg_trade = np.mean([t["return_pct"] for t in trades]) if trades else 0.0
+    exposure = float((returns != 0).mean())
+
+    return {
+        "total_return_pct": round(total_return * 100, 2),
+        "benchmark_return_pct": round(bench_return * 100, 2),
+        "cagr_pct": round(cagr * 100, 2),
+        "sharpe": round(float(sharpe), 2),
+        "sortino": round(float(sortino), 2),
+        "max_drawdown_pct": round(_max_drawdown(equity) * 100, 2),
+        "num_trades": len(trades),
+        "win_rate_pct": round(win_rate * 100, 1),
+        "avg_trade_pct": round(float(avg_trade), 2),
+        "final_equity": round(float(equity.iloc[-1]), 2),
+        "exposure_pct": round(exposure * 100, 1),
+    }
