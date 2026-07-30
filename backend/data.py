@@ -190,3 +190,18 @@ def _ohlcv_from_close(rng: np.random.Generator, close: np.ndarray,
         {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
         index=index,
     )
+
+
+def _synthetic_history(ticker: str, period: str, interval: str) -> pd.DataFrame:
+    rng = np.random.default_rng(_seed_for(ticker))
+    n = _PERIOD_TO_DAYS.get(period, 504)
+    freq = "W-FRI" if interval == "1wk" else "B"
+    if interval == "1wk":
+        n = max(20, n // 5)
+    end = datetime.now()
+    index = pd.date_range(end=end, periods=n, freq=freq)
+    start_price = 50 + (_seed_for(ticker) % 400)
+    daily_vol = 0.012 if interval != "1wk" else 0.025
+    close = _gbm_prices(rng, n, start_price, mu=0.0004, sigma=daily_vol)
+    return _ohlcv_from_close(rng, close, index)
+
