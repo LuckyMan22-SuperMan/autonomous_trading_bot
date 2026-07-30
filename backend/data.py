@@ -161,3 +161,19 @@ def latest_price(ticker: str, source: Optional[str] = None,
                       source=source, market=market)
     return float(df["Close"].iloc[-1])
 
+
+# --------------------------------------------------------------------------- #
+# Synthetic data generation (geometric Brownian motion)
+# --------------------------------------------------------------------------- #
+def _seed_for(ticker: str) -> int:
+    h = hashlib.md5(ticker.upper().encode()).hexdigest()
+    return int(h[:8], 16)
+
+
+def _gbm_prices(rng: np.random.Generator, n: int, start: float,
+                mu: float, sigma: float) -> np.ndarray:
+    """Generate n closing prices via geometric Brownian motion."""
+    shocks = rng.normal(mu, sigma, size=n)
+    path = start * np.exp(np.cumsum(shocks))
+    return path
+
