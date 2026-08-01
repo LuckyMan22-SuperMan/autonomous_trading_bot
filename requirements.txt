@@ -1,5 +1,6 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-yfinance==0.2.51
+yfinance>=0.2.55
+curl_cffi>=0.7.0
 pandas>=2.2.0
 numpy>=1.26.0
