@@ -27,24 +27,29 @@ import yfinance as yf
 _CACHE: dict[str, Tuple[float, pd.DataFrame]] = {}
 
 
-def _build_session() -> Optional[requests.Session]:
-    """Return a requests session.
+def _build_session() -> requests.Session:
+   
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+    })
 
-    On corporate networks that intercept TLS with a self-signed root CA,
-    certificate verification fails. Set TB_INSECURE_SSL=1 to disable
-    verification (demo/dev convenience only — never do this in production).
-    Alternatively point REQUESTS_CA_BUNDLE at your corporate CA bundle.
-    """
     if os.environ.get("TB_INSECURE_SSL", "").lower() in ("1", "true", "yes"):
-        session = requests.Session()
         session.verify = False
         try:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         except Exception:  # noqa: BLE001
             pass
-        return session
-    return None  # let yfinance use its default (secure) session
+
+    return session
 
 
 _SESSION = _build_session()
