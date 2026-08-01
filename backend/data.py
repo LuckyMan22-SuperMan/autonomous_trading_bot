@@ -20,39 +20,18 @@ from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import requests
 import yfinance as yf
 
 # Simple TTL cache: {(key): (timestamp, dataframe)}
 _CACHE: dict[str, Tuple[float, pd.DataFrame]] = {}
 
 
-def _build_session() -> requests.Session:
-   
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/122.0.0.0 Safari/537.36"
-        ),
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Connection": "keep-alive",
-    })
-
-    if os.environ.get("TB_INSECURE_SSL", "").lower() in ("1", "true", "yes"):
-        session.verify = False
-        try:
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        except Exception:  # noqa: BLE001
-            pass
-
-    return session
-
-
-_SESSION = _build_session()
+if os.environ.get("TB_INSECURE_SSL", "").lower() in ("1", "true", "yes"):
+    try:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _cache_get(key: str, ttl: float) -> pd.DataFrame | None:
@@ -128,7 +107,7 @@ def get_history(ticker: str, period: str = "2y", interval: str = "1d",
         df = _synthetic_history(ticker, period, interval)
     else:
         df = yf.download(ticker, period=period, interval=interval,
-                         auto_adjust=True, progress=False, session=_SESSION)
+                         auto_adjust=True, progress=False)
         if df is None or df.empty:
             raise ValueError(f"No data returned for '{ticker}'. Check the symbol "
                              f"or switch the data source to 'synthetic'.")
@@ -152,7 +131,7 @@ def get_intraday(ticker: str, period: str = "5d", interval: str = "5m",
         df = _synthetic_intraday(ticker, interval)
     else:
         df = yf.download(ticker, period=period, interval=interval,
-                         auto_adjust=True, progress=False, session=_SESSION)
+                         auto_adjust=True, progress=False)
         if df is None or df.empty:
             raise ValueError(f"No intraday data for '{ticker}'.")
         df = _normalize(df)
