@@ -97,3 +97,7 @@ Pick a source in the dashboard (or via the `source` field / `TB_DATA_SOURCE` env
 - Swap in an ML strategy (e.g. gradient-boosted classifier on engineered features).
 - Persist sessions/results to SQLite; add multi-asset portfolios.
 - Dockerize and deploy; wire a real broker sandbox API (e.g. Alpaca paper trading).
+
+#Problem with deployment
+Yahoo Finance actively fingerprints and blocks requests coming from datacenter/cloud IPs (Render, AWS, GCP, etc.) far more aggressively than residential IPs like my local machine's. Instead of returning stock data, Yahoo was sending back an empty or non-JSON response, which yfinance then failed to parse as JSON, producing that JSONDecodeError.
+Instead modern yfinance versions actually manage their own internal session via curl_cffi, a library that can impersonate a real browser's TLS/HTTP fingerprint, which lets requests get past Yahoo's blocking.
